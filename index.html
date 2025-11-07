@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NPrep App Redirect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f2f3f7;
+      --card: #ffffff;
+      --text: #06122f;
+      --muted: #5b6471;
+      --accent: #1f5eff;
+      --border: #dfe7f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Source Sans Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 32px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 8px 16px 32px rgba(35, 58, 79, 0.15), 20px 30px 80px rgba(73, 73, 93, 0.2);
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      margin: 0 auto 16px;
+      background: url("https://play-lh.googleusercontent.com/BCNJMuQfk8SVL7W2ayFbExDLwXqzmUX4uNQ_WwSCm8YgOWKoxg8-69hMUJte7OqaqHA") center/cover no-repeat;
+      box-shadow: 0 8px 24px rgba(6, 18, 47, 0.25);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .qr-wrapper {
+      margin: 24px auto;
+      width: 240px;
+      height: 240px;
+      padding: 12px;
+      border-radius: 24px;
+      border: 1px dashed var(--border);
+      background: #f9fbff;
+    }
+
+    .qr-wrapper img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .store-links a {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .store-links a:focus,
+    .store-links a:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .params {
+      margin-top: 16px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section id="fallback" class="card hidden" aria-live="polite">
+      <div class="logo" aria-label="NPrep app logo"></div>
+      <h1>Download the NPrep app</h1>
+      <p>Scan the QR code or pick your store below. All tracking parameters are preserved.</p>
+      <div class="qr-wrapper">
+        <img id="qr-code" alt="QR code for this deep link">
+      </div>
+      <div class="store-links">
+        <a id="ios-link" href="https://apps.apple.com/in/app/nprep/id6471326537">Open in App Store</a>
+        <a id="android-link" href="https://play.google.com/store/apps/details?id=com.n_prep.medieducation">Open in Play Store</a>
+      </div>
+      <p id="param-info" class="params"></p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const IOS_BASE = 'https://apps.apple.com/in/app/nprep/id6471326537';
+      const ANDROID_BASE = 'https://play.google.com/store/apps/details?id=com.n_prep.medieducation&hl=en_IN';
+
+      const fallback = document.getElementById('fallback');
+      const qr = document.getElementById('qr-code');
+      const iosLink = document.getElementById('ios-link');
+      const androidLink = document.getElementById('android-link');
+      const paramInfo = document.getElementById('param-info');
+
+      const origin = window.location.origin;
+      const suffix = window.location.href.slice(origin.length) || '/';
+      const hasCustomRoute = suffix && suffix !== '/';
+
+      // Preserve everything after the domain so the app can reconstruct the deep link.
+      const payload = hasCustomRoute ? suffix : '';
+
+      const buildIosTarget = () => {
+        const url = new URL(IOS_BASE);
+        if (payload) {
+          url.searchParams.set('ct', payload);
+          url.searchParams.set('mt', '8');
+        }
+        return url.toString();
+      };
+
+      const buildAndroidTarget = () => {
+        const url = new URL(ANDROID_BASE);
+        if (payload) {
+          url.searchParams.set('referrer', payload);
+        }
+        return url.toString();
+      };
+
+      const iosTarget = buildIosTarget();
+      const androidTarget = buildAndroidTarget();
+
+      iosLink.href = iosTarget;
+      androidLink.href = androidTarget;
+
+      if (paramInfo) {
+        paramInfo.textContent = payload ? 'Passing parameters: ' + payload : 'No tracking parameters detected.';
+      }
+
+      if (qr) {
+        qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(window.location.href) + '&margin=0';
+      }
+
+      const ua = (navigator.userAgent || navigator.vendor || '').toLowerCase();
+      const isIOS = /iphone|ipad|ipod/.test(ua);
+      const isAndroid = /android/.test(ua);
+
+      if (isIOS) {
+        window.location.replace(iosTarget);
+        return;
+      }
+
+      if (isAndroid) {
+        window.location.replace(androidTarget);
+        return;
+      }
+
+      fallback.classList.remove('hidden');
+    })();
+  </script>
+</body>
+</html>
