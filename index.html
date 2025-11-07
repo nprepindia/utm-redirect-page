@@ -137,6 +137,8 @@
     (function () {
       const IOS_BASE = 'https://apps.apple.com/in/app/nprep/id6471326537';
       const ANDROID_BASE = 'https://play.google.com/store/apps/details?id=com.n_prep.medieducation&hl=en_IN';
+      const APP_LINK_SCHEME = 'nprep://link'; // App must register this scheme or adjust accordingly.
+      const STORE_REDIRECT_DELAY = 1600;
 
       const fallback = document.getElementById('fallback');
       const qr = document.getElementById('qr-code');
@@ -150,6 +152,12 @@
 
       // Preserve everything after the domain so the app can reconstruct the deep link.
       const payload = hasCustomRoute ? suffix : '';
+
+      const showFallback = () => {
+        if (fallback.classList.contains('hidden')) {
+          fallback.classList.remove('hidden');
+        }
+      };
 
       const buildIosTarget = () => {
         const url = new URL(IOS_BASE);
@@ -171,6 +179,44 @@
       const iosTarget = buildIosTarget();
       const androidTarget = buildAndroidTarget();
 
+      const buildAppLink = () => {
+        const normalized = payload || '/';
+        return `${APP_LINK_SCHEME}${normalized}`;
+      };
+
+      const attemptAppOpen = (appUrl, storeUrl) => {
+        showFallback();
+
+        let fallbackTriggered = false;
+        const timer = setTimeout(() => {
+          fallbackTriggered = true;
+          window.location.replace(storeUrl);
+        }, STORE_REDIRECT_DELAY);
+
+        const cancelFallback = () => {
+          if (!fallbackTriggered) {
+            clearTimeout(timer);
+            fallbackTriggered = true;
+          }
+        };
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            cancelFallback();
+          }
+        }, { once: false });
+
+        window.addEventListener('pagehide', cancelFallback, { once: true });
+
+        try {
+          window.location.href = appUrl;
+        } catch (err) {
+          window.location.replace(storeUrl);
+        }
+      };
+
+      const appLinkTarget = buildAppLink();
+
       iosLink.href = iosTarget;
       androidLink.href = androidTarget;
 
@@ -187,16 +233,16 @@
       const isAndroid = /android/.test(ua);
 
       if (isIOS) {
-        window.location.replace(iosTarget);
+        attemptAppOpen(appLinkTarget, iosTarget);
         return;
       }
 
       if (isAndroid) {
-        window.location.replace(androidTarget);
+        attemptAppOpen(appLinkTarget, androidTarget);
         return;
       }
 
-      fallback.classList.remove('hidden');
+      showFallback();
     })();
   </script>
 </body>
