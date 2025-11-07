@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.n_prep.medieducation",
+      "sha256_cert_fingerprints": [
+        "8F:C9:CA:48:05:7A:22:31:2E:88:AA:5F:31:08:15:95:74:A9:83:A3:6C:3A:22:34:14:A9:7B:37:68:15:17:B0",
+        "CB:E4:30:54:25:50:E1:9F:F6:B5:FC:4D:D7:0A:57:7F:A2:D6:13:CF:03:C5:74:89:FD:B9:B0:FE:2A:5E:76:C8"
+      ]
+    }
+  }
+]
